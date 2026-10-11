@@ -1,0 +1,153 @@
+<!doctype html>
+<!-- optima save · the setup window. Runs inside the helper (WebView2, InPrivate, no devtools, no
+     navigation away). Everything it shows comes from the helper as plain data; every button only names
+     a choice ("connect browser 2"), and the helper decides what that means. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; font-src data:; img-src https://optima-save.setup">
+<title>optima save</title>
+<style>
+  @font-face { font-family: Inter; src: url(/*FONT*/) format('woff2'); font-weight: 100 900; }
+  :root {
+    --plastic: #e7e3dd; --plastic-hi: #efebe6; --plastic-lo: #dcd7cf;
+    --hi: rgba(255,255,255,.92); --lo: rgba(158,147,133,.5);
+    --ink: #2b2926; --ink-2: #5d5852; --muted: #8e877e; --ring: #34312d; --blue: #2a47c4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--plastic); color: var(--ink); user-select: none;
+    font: 13.5px/1.45 Inter, "Segoe UI", system-ui, sans-serif; font-feature-settings: "cv11", "ss01"; }
+  body { display: flex; flex-direction: column; gap: 18px; padding: 26px 30px 22px; }
+  header { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  header img { width: 150px; height: auto; }
+  .word { font-size: 22px; letter-spacing: -.035em; text-shadow: 1px 1px 0 #fff; }
+  .word span { font-weight: 300; } .word b { font-weight: 700; }
+  .version { color: var(--muted); font-size: 12px; }
+
+  .slab { border-radius: 26px; padding: 18px 20px; background: linear-gradient(145deg, var(--plastic-hi), var(--plastic-lo));
+    box-shadow: -8px -8px 18px var(--hi), 8px 8px 20px var(--lo); }
+  h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  h2 em { font-style: normal; color: var(--blue); margin-right: 6px; }
+  .status { color: var(--ink-2); font-size: 12.5px; margin-bottom: 10px; min-height: 18px; }
+  .groove { height: 8px; border-radius: 999px; box-shadow: inset 2px 2px 5px var(--lo), inset -2px -2px 5px var(--hi); overflow: hidden; }
+  .fill { height: 100%; width: 0; border-radius: 999px; background: var(--blue); transition: width .2s; }
+  .ok .fill { width: 100%; }
+
+  .browser { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+  .browser + .browser, .browser + .steps + .browser { border-top: 1px solid #cdc6bc; box-shadow: 0 1px 0 #fbfaf8 inset; }
+  .browser .name { flex: 1; }
+  .browser .done { color: var(--blue); font-size: 12.5px; display: none; }
+  .browser.added .done { display: inline; }
+  .steps { display: none; margin: 0 0 10px; padding: 12px 16px; border-radius: 18px; color: var(--ink-2); font-size: 12.5px;
+    box-shadow: inset 5px 5px 11px var(--lo), inset -5px -5px 11px var(--hi); }
+  .steps.open { display: block; }
+  .steps ol { margin: 0 0 8px; padding-left: 18px; }
+  .steps li { margin: 3px 0; }
+  .steps b { color: var(--ink); font-weight: 600; }
+  .muted { color: var(--muted); font-size: 12px; }
+
+  button { font: inherit; color: var(--ink); cursor: pointer; }
+  .pill { height: 34px; padding: 0 16px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+    border: 1.4px solid var(--ring); background: linear-gradient(145deg, var(--plastic-hi), var(--plastic-lo));
+    box-shadow: -4px -4px 9px var(--hi), 4px 4px 10px var(--lo), 0 0 0 3px rgba(255,255,255,.35); transition: transform .15s, box-shadow .15s; }
+  .pill:hover { transform: translateY(-1px); }
+  .pill:active { transform: none; box-shadow: inset 5px 5px 11px var(--lo), inset -5px -5px 11px var(--hi); }
+  .pill.blue { color: var(--blue); border-color: var(--blue); }
+  .pill.small { height: 28px; padding: 0 12px; font-size: 12px; }
+  footer { display: flex; align-items: center; gap: 12px; }
+  footer .spacer { flex: 1; }
+  .link { background: none; border: 0; padding: 0; color: var(--muted); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+  .link:hover { color: var(--ink); }
+  .confirm { display: none; color: var(--ink-2); font-size: 12.5px; }
+  .confirm.open { display: flex; align-items: center; gap: 10px; }
+  @media (prefers-reduced-motion: reduce) { .pill, .fill { transition: none; } }
+</style>
+</head>
+<body>
+  <header>
+    <img src="https://optima-save.setup/logo.png" alt="">
+    <div class="word"><span>optima</span> <b>save</b></div>
+    <div class="version" id="version"></div>
+  </header>
+
+  <section class="slab" id="tools">
+    <h2><em>1</em>the helper</h2>
+    <div class="status" id="toolsStatus">getting yt-dlp, deno and ffmpeg (about 150 MB, once)</div>
+    <div class="groove"><div class="fill" id="toolsFill"></div></div>
+  </section>
+
+  <section class="slab">
+    <h2><em>2</em>your browsers</h2>
+    <div id="browsers"><div class="muted">looking for browsers…</div></div>
+  </section>
+
+  <footer>
+    <div class="confirm" id="confirm">remove optima save and its tools from this pc?
+      <button class="pill small" id="yesRemove">remove</button><button class="pill small" id="noRemove">keep it</button></div>
+    <button class="link" id="remove">remove optima save from this pc</button>
+    <span class="spacer"></span>
+    <button class="pill blue" id="close">done</button>
+  </footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const send = (m) => window.chrome.webview.postMessage(m);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+function steps(family, folder) {
+  const box = el('div', 'steps');
+  if (family === 'firefox') {
+    const ol = el('ol');
+    ol.append(el('li', null, 'in the tab that opened, click continue to installation'), el('li', null, 'then click add'));
+    box.append(ol, el('div', 'muted', 'it updates itself from then on.'));
+  } else {
+    const ol = el('ol');
+    const li1 = el('li'); li1.append('turn on '); li1.append(el('b', null, 'developer mode')); li1.append(' (top right of the extensions page that opened)');
+    const li2 = el('li'); li2.append('click '); li2.append(el('b', null, 'load unpacked'));
+    const li3 = el('li'); li3.append('paste the folder (it\'s copied: ctrl+v in the address bar of the picker) and click '); li3.append(el('b', null, 'select folder'));
+    ol.append(li1, li2, li3);
+    const show = el('button', 'pill small', 'show the folder');
+    show.addEventListener('click', () => send({ type: 'folder' }));
+    box.append(ol, el('div', 'muted', String(folder || '')), show);
+  }
+  return box;
+}
+
+window.chrome.webview.addEventListener('message', (e) => {
+  const m = e.data || {};
+  if (m.type === 'state') {
+    $('version').textContent = 'version ' + String(m.version || '');
+    const list = $('browsers');
+    list.textContent = '';
+    const browsers = Array.isArray(m.browsers) ? m.browsers : [];
+    if (!browsers.length) list.append(el('div', 'muted', 'no supported browser found. optima save works with firefox, zen, floorp, chrome, brave and edge.'));
+    for (const b of browsers) {
+      const row = el('div', 'browser');
+      const add = el('button', 'pill small' + (browsers.length === 1 ? ' blue' : ''), 'add to ' + String(b.name).toLowerCase());
+      const box = steps(b.family, m.folder);
+      add.addEventListener('click', () => { send({ type: 'connect', i: b.i }); row.classList.add('added'); box.classList.add('open'); });
+      row.append(el('span', 'name', String(b.name)), el('span', 'done', 'opened ✓'), add);
+      list.append(row, box);
+    }
+  }
+  if (m.type === 'tools') {
+    $('toolsFill').style.width = Math.max(0, Math.min(100, Number(m.pct) || 0)) + '%';
+    $('toolsStatus').textContent = String(m.text || '');
+  }
+  if (m.type === 'tools-done') {
+    $('tools').classList.toggle('ok', !!m.ok);
+    $('toolsStatus').textContent = String(m.text || '');
+  }
+});
+
+$('close').addEventListener('click', () => send({ type: 'close' }));
+$('remove').addEventListener('click', () => { $('remove').style.display = 'none'; $('confirm').classList.add('open'); });
+$('noRemove').addEventListener('click', () => { $('confirm').classList.remove('open'); $('remove').style.display = ''; });
+$('yesRemove').addEventListener('click', () => send({ type: 'uninstall' }));
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') send({ type: 'close' }); });
+send({ type: 'ready' });
+</script>
+</body>
+</html>

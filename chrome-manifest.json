@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "optima save",
+  "version": "1.3.0",
+  "description": "right-click a video, pick mp4 or mp3 in the save dialog, done. youtube, tiktok, instagram and most other sites.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt6/+vmppQw5l6wI0UDOjwZbN+J+U/c06hykPupnw4xjVobtWRvScZqwWmM7Qs37EiYPHf/gKl9Lcy3+J3y0BIS7XamV8/5o+Ubc3A1Lo31Ioni0kCDxUW+RH5G4Y8CGBFlHVz8byBJ4XyYGxjg9pLZ/246VhJHCHFQ4WR6c1fCVrRaWJIDTYCUp51xDsnvkGnoDouBLq6BQOPZBzlgAaw1/VTu30p6aEaWQuP388fG74evlOG7RWB0EpJfF6Zxe8kAwTrI1ymtRMaQUNqj+POJIQnfg4198iwhTGMWkR/RZ3b//pIWNsZtvPsgvFnFs+rppPByu997NpJQeSuoi+wwIDAQAB",
+  "permissions": [
+    "contextMenus",
+    "nativeMessaging",
+    "activeTab",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "save video as…",
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png"
+    }
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "save the video on this page"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
